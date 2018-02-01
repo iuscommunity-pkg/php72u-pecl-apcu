@@ -9,24 +9,25 @@
 # Please, preserve the changelog entries
 #
 %global pecl_name apcu
-%global with_zts  0%{?__ztsphp:1}
 %global ini_name  40-%{pecl_name}.ini
-%global php_base  php72u
+%global php       php72u
 
-Name:           %{php_base}-pecl-%{pecl_name}
+%bcond_without zts
+
+Name:           %{php}-pecl-%{pecl_name}
 Summary:        APC User Cache
 Version:        5.1.9
 Release:        1.ius%{?dist}
-Source0:        http://pecl.php.net/get/%{pecl_name}-%{version}.tgz
+Source0:        https://pecl.php.net/get/%{pecl_name}-%{version}.tgz
 Source1:        %{pecl_name}.ini
 Source2:        %{pecl_name}-panel.conf
 Source3:        %{pecl_name}.conf.php
 
 License:        PHP
 Group:          Development/Languages
-URL:            http://pecl.php.net/package/APCu
+URL:            https://pecl.php.net/package/APCu
 
-BuildRequires:  %{php_base}-devel
+BuildRequires:  %{php}-devel
 BuildRequires:  pecl >= 1.10.0
 BuildRequires:  pcre-devel
 
@@ -43,14 +44,14 @@ Provides:       php-pecl-%{pecl_name}%{?_isa} = %{version}
 # provide the stock and IUS names without pecl
 Provides:       php-%{pecl_name} = %{version}
 Provides:       php-%{pecl_name}%{?_isa} = %{version}
-Provides:       %{php_base}-%{pecl_name} = %{version}
-Provides:       %{php_base}-%{pecl_name}%{?_isa} = %{version}
+Provides:       %{php}-%{pecl_name} = %{version}
+Provides:       %{php}-%{pecl_name}%{?_isa} = %{version}
 
 # provide the stock and IUS names in pecl() format
 Provides:       php-pecl(%{pecl_name}) = %{version}
 Provides:       php-pecl(%{pecl_name})%{?_isa} = %{version}
-Provides:       %{php_base}-pecl(%{pecl_name}) = %{version}
-Provides:       %{php_base}-pecl(%{pecl_name})%{?_isa} = %{version}
+Provides:       %{php}-pecl(%{pecl_name}) = %{version}
+Provides:       %{php}-pecl(%{pecl_name})%{?_isa} = %{version}
 
 # conflict with the stock name
 Conflicts:      php-pecl-%{pecl_name} < %{version}
@@ -70,7 +71,7 @@ APCu only supports userland caching of variables.
 Summary:       APCu developer files (header)
 Group:         Development/Libraries
 Requires:      %{name}%{?_isa} = %{version}-%{release}
-Requires:      %{php_base}-devel%{?_isa}
+Requires:      %{php}-devel%{?_isa}
 Provides:      php-pecl-%{pecl_name}-devel = %{version}
 Provides:      php-pecl-%{pecl_name}-devel%{?_isa} = %{version}
 Conflicts:     php-pecl-%{pecl_name}-devel < %{version}
@@ -85,8 +86,8 @@ Summary:       APCu control panel
 Group:         Applications/Internet
 BuildArch:     noarch
 Requires:      %{name} = %{version}-%{release}
-Requires:      mod_%{php_base}
-Requires:      %{php_base}-gd
+Requires:      mod_%{php}
+Requires:      %{php}-gd
 Provides:      apcu-panel = %{version}
 Conflicts:     apcu-panel < %{version}
 
@@ -102,24 +103,21 @@ mv %{pecl_name}-%{version} NTS
 
 sed -e '/LICENSE/s/role="doc"/role="src"/' -i package.xml
 
-pushd NTS
-
 # Sanity check, really often broken
-extver=$(sed -n '/#define PHP_APCU_VERSION/{s/.* "//;s/".*$//;p}' php_apc.h)
+extver=$(sed -n '/#define PHP_APCU_VERSION/{s/.* "//;s/".*$//;p}' NTS/php_apc.h)
 if test "x${extver}" != "x%{version}"; then
    : Error: Upstream extension version is ${extver}, expecting %{version}.
    exit 1
 fi
-popd
 
-%if %{with_zts}
+%if %{with zts}
 # duplicate for ZTS build
 cp -pr NTS ZTS
 %endif
 
 # Fix path to configuration file
 sed -e s:apc.conf.php:%{_sysconfdir}/apcu-panel/conf.php:g \
-    -i  NTS/apc.php
+    -i NTS/apc.php
 
 
 %build
@@ -128,16 +126,16 @@ pushd NTS
 %configure \
    --enable-apcu \
    --with-php-config=%{_bindir}/php-config
-make %{?_smp_mflags}
+%make_build
 popd
 
-%if %{with_zts}
+%if %{with zts}
 pushd ZTS
 %{_bindir}/zts-phpize
 %configure \
    --enable-apcu \
    --with-php-config=%{_bindir}/zts-php-config
-make %{?_smp_mflags}
+%make_build
 popd
 %endif
 
@@ -147,7 +145,7 @@ popd
 make -C NTS install INSTALL_ROOT=%{buildroot}
 install -D -m 644 %{SOURCE1} %{buildroot}%{php_inidir}/%{ini_name}
 
-%if %{with_zts}
+%if %{with zts}
 # Install the ZTS stuff
 make -C ZTS install INSTALL_ROOT=%{buildroot}
 install -D -m 644 %{SOURCE1} %{buildroot}%{php_ztsinidir}/%{ini_name}
@@ -170,30 +168,29 @@ install -D -m 644 -p %{SOURCE3} \
         %{buildroot}%{_sysconfdir}/apcu-panel/conf.php
 
 # Test & Documentation
-cd NTS
-for i in $(grep 'role="test"' ../package.xml | sed -e 's/^.*name="//;s/".*$//')
-do install -Dpm 644 $i %{buildroot}%{pecl_testdir}/%{pecl_name}/$i
+for i in $(grep 'role="test"' package.xml | sed -e 's/^.*name="//;s/".*$//')
+do install -D -p -m 644 NTS/$i %{buildroot}%{pecl_testdir}/%{pecl_name}/$i
 done
-for i in $(grep 'role="doc"' ../package.xml | sed -e 's/^.*name="//;s/".*$//')
-do install -Dpm 644 $i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
+for i in $(grep 'role="doc"' package.xml | sed -e 's/^.*name="//;s/".*$//')
+do install -D -p -m 644 NTS/$i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
 done
 
 
 %check
 pushd NTS
-%{_bindir}/php -n \
+%{__php} -n \
    -d extension=%{buildroot}%{php_extdir}/%{pecl_name}.so \
    -m | grep 'apcu'
 
 # Upstream test suite for NTS extension
-TEST_PHP_EXECUTABLE=%{_bindir}/php \
+TEST_PHP_EXECUTABLE=%{__php} \
 TEST_PHP_ARGS="-n -d extension=%{buildroot}%{php_extdir}/%{pecl_name}.so" \
 NO_INTERACTION=1 \
 REPORT_EXIT_STATUS=1 \
-%{_bindir}/php -n run-tests.php
+%{__php} -n run-tests.php
 popd
 
-%if %{with_zts}
+%if %{with zts}
 pushd ZTS
 %{__ztsphp} -n \
    -d extension=%{buildroot}%{php_ztsextdir}/%{pecl_name}.so \
@@ -227,7 +224,7 @@ fi
 %config(noreplace) %{php_inidir}/%{ini_name}
 %{php_extdir}/%{pecl_name}.so
 
-%if %{with_zts}
+%if %{with zts}
 %{php_ztsextdir}/%{pecl_name}.so
 %config(noreplace) %{php_ztsinidir}/%{ini_name}
 %endif
@@ -237,7 +234,7 @@ fi
 %doc %{pecl_testdir}/%{pecl_name}
 %{php_incldir}/ext/%{pecl_name}
 
-%if %{with_zts}
+%if %{with zts}
 %{php_ztsincldir}/ext/%{pecl_name}
 %endif
 
