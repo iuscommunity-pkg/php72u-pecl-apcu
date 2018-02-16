@@ -16,8 +16,8 @@
 
 Name:           %{php}-pecl-%{pecl_name}
 Summary:        APC User Cache
-Version:        5.1.9
-Release:        2.ius%{?dist}
+Version:        5.1.10
+Release:        1.ius%{?dist}
 Source0:        https://pecl.php.net/get/%{pecl_name}-%{version}.tgz
 Source1:        %{pecl_name}.ini
 Source2:        %{pecl_name}-panel.conf
@@ -58,11 +58,6 @@ Provides:       %{php}-pecl(%{pecl_name})%{?_isa} = %{version}
 
 # conflict with the stock name
 Conflicts:      php-pecl-%{pecl_name} < %{version}
-
-%{?filter_provides_in: %filter_provides_in %{php_extdir}/.*\.so$}
-%{?filter_provides_in: %filter_provides_in %{php_ztsextdir}/.*\.so$}
-%{?filter_setup}
-
 
 %description
 APCu is userland caching: APC stripped of opcode caching.
@@ -259,6 +254,9 @@ fi
 
 
 %changelog
+* Fri Feb 16 2018 Ben Harper <ben.harper@rackspace.com> - 5.1.10-1.ius
+- Latest upstream
+
 * Thu Feb 01 2018 Carl George <carl@george.computer> - 5.1.9-2.ius
 - Remove pear requirement and update scriptlets (adapted from remirepo)
 
