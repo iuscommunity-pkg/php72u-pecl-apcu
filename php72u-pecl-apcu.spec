@@ -27,15 +27,10 @@ License:        PHP
 URL:            https://pecl.php.net/package/APCu
 
 BuildRequires:  gcc
+# build require pear1's dependencies to avoid mismatched php stacks
+BuildRequires:  pear1 %{php}-cli %{php}-common %{php}-xml
 BuildRequires:  %{php}-devel
 BuildRequires:  pcre-devel
-
-BuildRequires:  pear1u
-# explicitly require pear dependencies to avoid conflicts
-BuildRequires:  %{php}-cli
-BuildRequires:  %{php}-common
-BuildRequires:  %{php}-process
-BuildRequires:  %{php}-xml
 
 Requires:       php(zend-abi) = %{php_zend_api}
 Requires:       php(api) = %{php_core_api}
@@ -202,7 +197,7 @@ popd
 %endif
 
 
-%triggerin -- pear1u
+%triggerin -- pear1
 if [ -x %{__pecl} ]; then
     %{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
 fi
@@ -254,6 +249,7 @@ fi
 %changelog
 * Tue Jul 02 2019 Carl George <carl@george.computer> - 5.1.17-1
 - Latest upstream
+- Switch from pear1u to pear1
 
 * Thu Mar 08 2018 Ben Harper <ben.harper@rackspace.com> - 5.1.11-1.ius
 - Latest upstream
