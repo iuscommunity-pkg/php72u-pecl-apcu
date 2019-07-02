@@ -16,17 +16,17 @@
 
 Name:           %{php}-pecl-%{pecl_name}
 Summary:        APC User Cache
-Version:        5.1.11
-Release:        1.ius%{?dist}
+Version:        5.1.17
+Release:        1%{?dist}
 Source0:        https://pecl.php.net/get/%{pecl_name}-%{version}.tgz
 Source1:        %{pecl_name}.ini
 Source2:        %{pecl_name}-panel.conf
 Source3:        %{pecl_name}.conf.php
 
 License:        PHP
-Group:          Development/Languages
 URL:            https://pecl.php.net/package/APCu
 
+BuildRequires:  gcc
 BuildRequires:  %{php}-devel
 BuildRequires:  pcre-devel
 
@@ -40,10 +40,6 @@ BuildRequires:  %{php}-xml
 Requires:       php(zend-abi) = %{php_zend_api}
 Requires:       php(api) = %{php_core_api}
 
-# provide the stock name
-Provides:       php-pecl-%{pecl_name} = %{version}
-Provides:       php-pecl-%{pecl_name}%{?_isa} = %{version}
-
 # provide the stock and IUS names without pecl
 Provides:       php-%{pecl_name} = %{version}
 Provides:       php-%{pecl_name}%{?_isa} = %{version}
@@ -56,8 +52,10 @@ Provides:       php-pecl(%{pecl_name})%{?_isa} = %{version}
 Provides:       %{php}-pecl(%{pecl_name}) = %{version}
 Provides:       %{php}-pecl(%{pecl_name})%{?_isa} = %{version}
 
-# conflict with the stock name
-Conflicts:      php-pecl-%{pecl_name} < %{version}
+# safe replacement
+Provides:       php-pecl-%{pecl_name} = %{version}-%{release}
+Provides:       php-pecl-%{pecl_name}%{?_isa} = %{version}-%{release}
+Conflicts:      php-pecl-%{pecl_name} < %{version}-%{release}
 
 %description
 APCu is userland caching: APC stripped of opcode caching.
@@ -67,12 +65,12 @@ APCu only supports userland caching of variables.
 
 %package devel
 Summary:       APCu developer files (header)
-Group:         Development/Libraries
 Requires:      %{name}%{?_isa} = %{version}-%{release}
 Requires:      %{php}-devel%{?_isa}
-Provides:      php-pecl-%{pecl_name}-devel = %{version}
-Provides:      php-pecl-%{pecl_name}-devel%{?_isa} = %{version}
-Conflicts:     php-pecl-%{pecl_name}-devel < %{version}
+# safe replacement
+Provides:      php-pecl-%{pecl_name}-devel = %{version}-%{release}
+Provides:      php-pecl-%{pecl_name}-devel%{?_isa} = %{version}-%{release}
+Conflicts:     php-pecl-%{pecl_name}-devel < %{version}-%{release}
 
 
 %description devel
@@ -81,13 +79,13 @@ These are the files needed to compile programs using APCu.
 
 %package panel
 Summary:       APCu control panel
-Group:         Applications/Internet
 BuildArch:     noarch
 Requires:      %{name} = %{version}-%{release}
 Requires:      mod_%{php}
 Requires:      %{php}-gd
-Provides:      apcu-panel = %{version}
-Conflicts:     apcu-panel < %{version}
+# safe replacement
+Provides:      apcu-panel = %{version}-%{release}
+Conflicts:     apcu-panel < %{version}-%{release}
 
 
 %description panel
@@ -254,6 +252,9 @@ fi
 
 
 %changelog
+* Tue Jul 02 2019 Carl George <carl@george.computer> - 5.1.17-1
+- Latest upstream
+
 * Thu Mar 08 2018 Ben Harper <ben.harper@rackspace.com> - 5.1.11-1.ius
 - Latest upstream
 
